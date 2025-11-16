@@ -20,13 +20,13 @@ double calculate(int n) {
             operations += 2;
             denominator += sin(j);
 
-            operations += 1; // Loop increment
+            operations++; // Loop increment
         }
 
         result *= (numerator / denominator);
         operations += 2;
 
-        operations += 1; // Loop increment
+        operations++; // Loop increment
     }
 
     printf("Operations: %d\n ", operations);

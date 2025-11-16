@@ -5,7 +5,7 @@
 
 double calculate(int n) {
     double result = 1.0;
-    double DPCache = 0.0;
+    double  DPCache = 0.0;
     int operations = 0;
 
     for(int i = 1; i <= n; i++) {
@@ -21,7 +21,7 @@ double calculate(int n) {
         operations += 2;
         result *= (numerator / DPCache);
 
-        operations += 1; // Loop increment
+        operations++; // Loop increment
     }
 
     printf("Operations: %d\n ", operations);
