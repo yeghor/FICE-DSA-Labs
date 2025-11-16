@@ -8,25 +8,21 @@ double calculate(int n) {
     double DPCache = 0.0;
     int operations = 0;
 
-    operations += 3;
-
     for(int i = 1; i <= n; i++) {
-        operations += 2; // increment and compare
-
         double numerator;
 
-        operations += 3;
+        operations += 2;
         numerator = cos(i) + 1;
 
-        operations += 3;
+        operations += 2;
         // DPCache - step denominator
         DPCache = DPCache + sin(i);
 
         operations += 2;
         result *= (numerator / DPCache);
-    }
 
-    operations += 1; // Break the cycle comparison
+        operations += 1; // Loop increment
+    }
 
     printf("Operations: %d\n ", operations);
 

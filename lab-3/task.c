@@ -8,8 +8,8 @@
 
 int main() {
 	// Note that rows amount must be even to display all the matrix elements according to task variant
-    int rows = 8;
-    int cols = 10;
+    int rows = 24;
+    int cols = 80;
 
 	if (!((rows % 2) == 0)) {
 		return 0;
