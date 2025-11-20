@@ -11,10 +11,6 @@ int main() {
     int rows = 24;
     int cols = 80;
 
-	if (!((rows % 2) == 0)) {
-		return 0;
-	};
-
     // Create matrix
     char matrix[rows][cols];
     for (int i = 0; i < rows; i++) {
@@ -26,17 +22,17 @@ int main() {
 	// Start position according to variant №14
 
 	// Getting bottom-central row index
-	int i = (rows) / 2;
+	int i = rows / 2;
 	int normalization = (rows - 1) - i;
 	int j = abs(normalization - (cols - 1));
 
-	while (1) {
+	while (true) {
 		// While loop iteration: left -> up -> right -> down
 
 		// Left
 		for (j; j >= normalization; j--) {
 			usleep(1000);
-			printf("\033[%d;%dH%c", i+2, j+1, matrix[i][j]);
+			printf("\033[%d;%dH%c", i+1, j+1, matrix[i][j]);
 		};
 
 		j++;
@@ -44,7 +40,7 @@ int main() {
 		// Up
 		for (i; i >= normalization; i--) {
 			usleep(1000);
-			printf("\033[%d;%dH%c", i+2, j+1, matrix[i][j]);
+			printf("\033[%d;%dH%c", i+1, j+1, matrix[i][j]);
 		};
 
 		i++;
@@ -55,11 +51,11 @@ int main() {
 		for (j; j <= (cols - 1) - normalization; j++) {
 			usleep(1000);
 
-			if ( j == (cols - 1) - normalization && normalization == -1 ) {
+			if (j == (cols - 1) - normalization && normalization == -1) {
 				return 0;
 			};
 
-			printf("\033[%d;%dH%c", i+2, j+1, matrix[i][j]);
+			printf("\033[%d;%dH%c", i+1, j+1, matrix[i][j]);
 		};
 
 		if (normalization == -1) {
@@ -71,7 +67,7 @@ int main() {
 		// Down
 		for (i; i <= (rows - 1) - normalization; i++) {
 			usleep(1000);
-			printf("\033[%d;%dH%c", i+2, j+1, matrix[i][j]);
+			printf("\033[%d;%dH%c", i+1, j+1, matrix[i][j]);
 		};
 
 		i--;
