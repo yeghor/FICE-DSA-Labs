@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define ROWS 10
 #define COLS 10
 
-void createMatrix(bool ascending, int instances, int rows, int cols, int matrix[rows][cols]) {
+srand(time(null));
+
+void createMatrix(bool ascending, int instances, bool random, int rows, int cols, int matrix[rows][cols]) {
     int value;
     if (!ascending) {
         value = rows * cols;
@@ -22,6 +25,11 @@ void createMatrix(bool ascending, int instances, int rows, int cols, int matrix[
     // Create matrix
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
+            if (random) {
+                matrix[i][j] =  int num = rand() % (COLS*ROWS + 1);
+                continue;
+            }
+
             matrix[i][j] = value;
 
             instancesCounter++;
@@ -50,7 +58,7 @@ void displayMatrix(int matrix[ROWS][COLS]) {
 int main() {
     int matrix[ROWS][COLS];
 
-    createMatrix(true, 1, ROWS, COLS, matrix);
+    createMatrix(true, 1, true ROWS, COLS, matrix);
 
     displayMatrix(matrix);
 
@@ -59,10 +67,10 @@ int main() {
     int firstIterations = COLS-1;
 
     for (int iterations = 0; iterations < abs(COLS); iterations++ ) {
+
         i = 0;
         j = 0;
 
-        // _ < COLS || _ < ROWS - Doesn't matter because input is square matrix
         for (int _ = 0; _ < firstIterations; _++) {
             if (matrix[i][j] < matrix[i+1][j+1]) {
                 int temp = matrix[i][j];
@@ -79,7 +87,6 @@ int main() {
         i = ROWS-1;
         j = COLS-1;
 
-        // _ < COLS || _ < ROWS - Doesn't matter because input is square matrix
         for (int _ = 0; _ < secondIterations; _++) {
             if (matrix[i][j] > matrix[i-1][j-1]) {
                 int temp = matrix[i][j];
