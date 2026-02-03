@@ -6,9 +6,7 @@
 #define ROWS 10
 #define COLS 10
 
-srand(time(null));
-
-void createMatrix(bool ascending, int instances, bool random, int rows, int cols, int matrix[rows][cols]) {
+void createMatrix(bool ascending, int instances, bool random, int rows, int cols, int matrix[ROWS][COLS]) {
     int value;
     if (!ascending) {
         value = rows * cols;
@@ -26,7 +24,7 @@ void createMatrix(bool ascending, int instances, bool random, int rows, int cols
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             if (random) {
-                matrix[i][j] =  int num = rand() % (COLS*ROWS + 1);
+                matrix[i][j] = rand() % (COLS*ROWS + 1);
                 continue;
             }
 
@@ -56,9 +54,11 @@ void displayMatrix(int matrix[ROWS][COLS]) {
 }
 
 int main() {
+	srand(time(NULL));
+
     int matrix[ROWS][COLS];
 
-    createMatrix(true, 1, true ROWS, COLS, matrix);
+    createMatrix(false, 1, false, ROWS, COLS, matrix);
 
     displayMatrix(matrix);
 
@@ -66,7 +66,7 @@ int main() {
     int secondIterations = COLS-1;
     int firstIterations = COLS-1;
 
-    for (int iterations = 0; iterations < abs(COLS); iterations++ ) {
+    for (int iterations = 0; iterations < abs(COLS/2); iterations++ ) {
 
         i = 0;
         j = 0;
