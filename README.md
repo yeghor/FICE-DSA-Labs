@@ -25,7 +25,7 @@ All labs were completed by myself with minimal AI help.
 
 To compile and run program, move to directory where it's located:
 ```bash
-cd path/to/programs/dir
+cd ./path/to/programs
 ```
 
 Compile the desired program:
