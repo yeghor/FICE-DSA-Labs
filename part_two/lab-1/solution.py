@@ -1,5 +1,7 @@
 import math
 import typing
+import matplotlib.pyplot as plt
+import numpy as np
 
 class ArccosApproximator:
     def __init__(self, n: int, x: float) -> None:
@@ -50,6 +52,8 @@ class ArccosApproximator:
 
         match recursion_method:
             case "return":
+                # __approx_on_return returns tuple -> (last_current, sum_) due to way it works.
+                # We need to get only sum_ return value, that is being stored as second element with index=1
                 return term - self.__approx_on_return(self.n)[1]
             case "descent":
                 return term - self.__approx_on_descent(0, 0, 0)
@@ -57,24 +61,24 @@ class ArccosApproximator:
                 return term - self.__approx_partially(0, 0)
 
 if __name__ == "__main__":
-    x = float(input("Enter x value (float in range [-1, 1]): "))
-    n = int(input("Enter n range (integer in range [1, 994]): "))
+    input_x = float(input("Enter x value (float in range [-1, 1]): "))
+    plot_n = int(input("Enter n range (integer in range [1, 994]): "))
 
-    if not 1 <= n <= 994:
+    if not 1 <= plot_n <= 994:
         raise ValueError("Invalid n valaue entered!")
-    elif not -1 <= x <= 1:
+    elif not -1 <= input_x <= 1:
         raise ValueError("Invalid x value. Arccos handle x only in [-1, 1] range!")
 
-    approximator = ArccosApproximator(n=n, x=x)
+    approximator = ArccosApproximator(n=plot_n, x=input_x)
 
     for method in ["return", "descent", "partially"]:
         print(f"Starting {method} testing!")
 
-        for n_ in range(1, n+1):
+        for n_ in range(1, plot_n+1):
             approximator.n = n_
 
             approx_res = approximator.approximate(recursion_method=method)
-            true_res = math.acos(x)
+            true_res = math.acos(input_x)
 
             print(f"Testing on n={n_}")
             print(f"Approx result: {approx_res}")
@@ -82,4 +86,30 @@ if __name__ == "__main__":
             print()
 
         print(f"\n================\n")
+
+    X, y = [_ for _ in np.linspace(-1, 1, 100)], []
+
+    plot_n = int(input("Enter plot n in range (integer in range [1, 994]): "))
+
+    if not 1 <= plot_n <= 994:
+        raise ValueError("Invalid n value entered!")
+
+    for x in X:
+        approximator.x = x
+
+        approx_res = approximator.approximate(recursion_method="return")
+        true_res = math.acos(x)
+
+        y.append(abs(approx_res - true_res))
+    
+    plt.plot(X, y)
+    plt.grid(True)
+    plt.ylabel("Approx error")
+    plt.xlabel("x")
+    plt.title(f"Method: return | n: {approximator.n}")
+    plt.savefig(f"C:\\Users\\Yehor\\Documents\\UniversityC\\DSA\\repo\\part_two\\lab-1\\visualizations\\vapprox_{method}.png")
+
+    plt.show()
+    plt.close()
+
             
