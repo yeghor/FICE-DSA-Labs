@@ -107,9 +107,5 @@ if __name__ == "__main__":
     plt.ylabel("Approx error")
     plt.xlabel("x")
     plt.title(f"Method: return | n: {approximator.n}")
-    plt.savefig(f"C:\\Users\\Yehor\\Documents\\UniversityC\\DSA\\repo\\part_two\\lab-1\\visualizations\\vapprox_{method}.png")
 
     plt.show()
-    plt.close()
-
-            
