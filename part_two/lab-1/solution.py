@@ -1,20 +1,5 @@
 import math
-
-# if i == 0:
-#     result = self.x
-    
-#     if i < self.n:
-#         return result + self.__first_recursive_approximator(i+1, result)
-# else:
-#     if previous_step is None:
-#         raise ValueError("No previsous step provided to i larger that 0")
-
-#     result = previous_step * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
-
-#     if i < self.n:
-#         return result + self.__first_recursive_approximator(i-1, result)
-    
-# return result
+import typing
 
 class ArccosApproximator:
     def __init__(self, n: int, x: float) -> None:
@@ -23,8 +8,6 @@ class ArccosApproximator:
 
     def __approx_on_return(self, i: int) -> float:
         cur = None
-
-        print(f"cur={cur}")
         
         if i == 0:
             return self.x, self.x
@@ -32,24 +15,71 @@ class ArccosApproximator:
             prev, sum_ = self.__approx_on_return(i-1)
             cur = prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
 
-        print(f"cur={cur}")
-
         return cur, sum_ + cur
 
-    def __approx_on_descent(self) -> float:
-        pass
+    def __approx_on_descent(self, i: int, p: float, t: float) -> float:
+        res = None
+        
+        if i == 0:
+            res = self.__approx_on_descent(i+1, self.x, self.x)
+        elif i > self.n:
+            return t
+        else:
+            cur = p * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            res = self.__approx_on_descent(i+1, cur, t+cur)
 
-    def __approx_partially(self, i: int) -> float:
-        pass        
+        return res
 
+    def __approx_partially(self, i: int, p: float) -> float:
+        sum_ = None
+        cur = 0
+        
+        if i == 0:
+            cur = self.x
+            sum_ = self.__approx_partially(i+1, self.x)
+        elif i >= self.n:
+            return p * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+        else:
+            cur = p * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            sum_ = self.__approx_partially(i+1, cur)
 
-    def approximate(self) -> float:
-        return (math.pi / 2) - self.__approx_on_return(0, 0, 0)
+        return cur + sum_
 
+    def approximate(self, recursion_method: typing.Literal["return", "descent", "partially"]) -> float:
+        term = math.pi / 2
 
-n, x = 10, 0.5 # x must be in range [-1, 1]
+        match recursion_method:
+            case "return":
+                return term - self.__approx_on_return(self.n)[1]
+            case "descent":
+                return term - self.__approx_on_descent(0, 0, 0)
+            case "partially":
+                return term - self.__approx_partially(0, 0)
 
-approx = ArccosApproximator(n, x)
+if __name__ == "__main__":
+    x = float(input("Enter x value (float in range [-1, 1]): "))
+    n = int(input("Enter n range (integer in range [1, 994]): "))
 
-print(f"Approximator: {approx.approximate()}")
-print(f"True result: {math.acos(x)}")
+    if not 1 <= n <= 994:
+        raise ValueError("Invalid n valaue entered!")
+    elif not -1 <= x <= 1:
+        raise ValueError("Invalid x value. Arccos handle x only in [-1, 1] range!")
+
+    approximator = ArccosApproximator(n=n, x=x)
+
+    for method in ["return", "descent", "partially"]:
+        print(f"Starting {method} testing!")
+
+        for n_ in range(1, n+1):
+            approximator.n = n_
+
+            approx_res = approximator.approximate(recursion_method=method)
+            true_res = math.acos(x)
+
+            print(f"Testing on n={n_}")
+            print(f"Approx result: {approx_res}")
+            print(f"True result: {true_res}")
+            print()
+
+        print(f"\n================\n")
+            
