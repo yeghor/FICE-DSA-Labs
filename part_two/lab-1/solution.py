@@ -19,20 +19,20 @@ class ArccosApproximator:
 
         return cur, sum_ + cur
 
-    def __approx_on_descent(self, i: int, p: float, t: float) -> float:
+    def __approx_on_descent(self, i: int, prev: float, sum_: float) -> float:
         res = None
         
         if i == 0:
             res = self.__approx_on_descent(i+1, self.x, self.x)
         elif i > self.n:
-            return t
+            return sum_
         else:
-            cur = p * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
-            res = self.__approx_on_descent(i+1, cur, t+cur)
+            cur = prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            res = self.__approx_on_descent(i+1, cur, sum_+cur)
 
         return res
 
-    def __approx_partially(self, i: int, p: float) -> float:
+    def __approx_partially(self, i: int, prev: float) -> float:
         sum_ = None
         cur = 0
         
@@ -40,9 +40,9 @@ class ArccosApproximator:
             cur = self.x
             sum_ = self.__approx_partially(i+1, self.x)
         elif i >= self.n:
-            return p * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            return prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
         else:
-            cur = p * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            cur = prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
             sum_ = self.__approx_partially(i+1, cur)
 
         return cur + sum_
@@ -62,19 +62,19 @@ class ArccosApproximator:
 
 if __name__ == "__main__":
     input_x = float(input("Enter x value (float in range [-1, 1]): "))
-    plot_n = int(input("Enter n range (integer in range [1, 994]): "))
+    n = int(input("Enter n range (integer in range [1, 994]): "))
 
-    if not 1 <= plot_n <= 994:
-        raise ValueError("Invalid n valaue entered!")
+    if not 1 <= n <= 994:
+        raise ValueError("Invalid n value entered!")
     elif not -1 <= input_x <= 1:
         raise ValueError("Invalid x value. Arccos handle x only in [-1, 1] range!")
 
-    approximator = ArccosApproximator(n=plot_n, x=input_x)
+    approximator = ArccosApproximator(n=n, x=input_x)
 
     for method in ["return", "descent", "partially"]:
         print(f"Starting {method} testing!")
 
-        for n_ in range(1, plot_n+1):
+        for n_ in range(1, n+1):
             approximator.n = n_
 
             approx_res = approximator.approximate(recursion_method=method)
@@ -90,6 +90,7 @@ if __name__ == "__main__":
     X, y = [_ for _ in np.linspace(-1, 1, 100)], []
 
     plot_n = int(input("Enter plot n in range (integer in range [1, 994]): "))
+    approximator.n = plot_n
 
     if not 1 <= plot_n <= 994:
         raise ValueError("Invalid n value entered!")

@@ -7,7 +7,7 @@ class Node:
     Doubly connected linked list node
     """
     def __init__(self, val: str, next_: Node | None = None, prev: Node | None = None):
-        if len(val) < 5:
+        if len(val) > 5:
             raise ValueError("Maximum value length exceeded!")
 
         self.val = val
@@ -23,7 +23,7 @@ class Node:
 class LinkedList:
     @staticmethod
     def validate_value(val: any) -> None:
-        """Raises: ValueError"""
+        """Raises: ValueError on invalid val"""
         if len(val) > 5:
             raise ValueError("Maximum value length exceeded!")
         elif not isinstance(val, str):
@@ -31,8 +31,19 @@ class LinkedList:
 
     def __init__(self, head: Node | None = None):
         self.__head = head
+        self.__tail = head
 
-    def __str__(self):
+    @property
+    def head(self) -> str | None:
+        if self.__head:
+            return f"[{self.__head.val}]"
+
+    @property
+    def tail(self) -> str | None:
+        if self.__tail:
+            return f"[{self.__tail.val}]"
+
+    def __str__(self) -> str:
         string = ""
 
         curr = self.__head
@@ -51,8 +62,9 @@ class LinkedList:
 
     def clear(self) -> None:
         # Garbage collector will delete sequent nodes
-        # Since after we null head, nothing will refer to the rest nodes
+        # Since we are nulling head & tail, nothing will refer to rest of the nodes
         self.__head = None
+        self.__tail = None
 
     def __len__(self) -> int:
         length = 0
@@ -68,14 +80,10 @@ class LinkedList:
         if not self.__head:
             return
         
-        curr = self.__head
+        curr = self.__tail
 
-        # Traveling until we get the last node
-        while curr.next:
-            curr = curr.next
-
-        # Updating the list head to the last node of the original list
-        self.__head = curr
+        # Swapping list head and tail
+        self.__head, self.__tail = curr, self.__head
 
         while curr:
             temp = curr.prev
@@ -87,19 +95,19 @@ class LinkedList:
 
 
     def append(self, val: str) -> None:
+        self.validate_value(val)
+
         new_node = Node(val, None, None)
 
         if not self.__head:
             self.__head = new_node
+            self.__tail = new_node
             return
 
-        curr = self.__head
+        self.__tail.next = new_node
+        new_node.prev = self.__tail
 
-        while curr.next:
-            curr = curr.next
-
-        new_node.prev = curr
-        curr.next = new_node
+        self.__tail = new_node
     
     def delete_by_value(self, val: str) -> bool:
         """Returns boolean value whether the node was deleted. \n\n Deletes only first matching value found"""
@@ -115,9 +123,12 @@ class LinkedList:
                     self.__head = curr.next
                     if self.__head:
                         self.__head.prev = None
+                        return True
+                    self.__tail = self.__head
                     return True
                 if not curr.next:
                     curr.prev.next = None
+                    self.__tail = curr.prev
                     return True
 
                 prev = curr.prev
@@ -149,14 +160,20 @@ if __name__ == "__main__":
     print("Reversed list:")
     print(ll)
 
+    print(f"List's head: {ll.head}")
+    print(f"List's tail: {ll.tail}")
+
     while 1:
         if len(ll) == 0:
             break
 
         to_delete = input("Choose value of node you want to delete (type 'exit' to finish): ")
 
-        if to_delete == "break":
+        if to_delete == "exit":
             break
 
         ll.delete_by_value(to_delete)
+
         print(ll)
+        print(f"List's head after deletion: {ll.head}")
+        print(f"List's tail after deletion: {ll.tail}")
