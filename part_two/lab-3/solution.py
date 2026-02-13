@@ -211,6 +211,9 @@ class GraphEngine:
 
         plt.xlim(0, 1500)
         plt.ylim(0, 1000)
+        plt.axis("off")
+        plt.title(f"{self.__VERTICES} nodes Graph visualization")
+        plt.savefig(f"./graph-{self.VERTICES}-nodes.png")
         plt.show()
     
 
