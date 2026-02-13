@@ -1,2 +1,4 @@
-                    # print(f"[DEBUG] Angle calculation for {i}->{j}: tan = {tan_arrow_angle:.4f} (dy={Y_distance:.2f}, dx={X_distance:.2f})")
-                    # print(f"[DEBUG] Start cords: ({start_x}, {start_y}), End cords: ({end_x}, {end_y})")
+                    # if self.__ADJACENCY_MATRIX[j, i] == 1:
+                    #     arrow_style = plt_patches.ArrowStyle("CurveAB")
+                    # else:
+                    #     arrow_style = plt_patches.ArrowStyle("CurveB")

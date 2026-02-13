@@ -13,8 +13,6 @@ class GraphEngine:
         """
         out = {}
 
-        X_flatten, Y_flatten, VALUES_flatten = [], [], []
-        
         for X_level, Y_level, VALUES_level in zip(X, Y, VALUES):
             for vertice_data in zip(X_level, Y_level, VALUES_level):
                 out[vertice_data[2]] = vertice_data[0], vertice_data[1]
@@ -188,17 +186,23 @@ class GraphEngine:
 
                     circle_end_X = end_x - self.node_radius * math.cos(arrow_angle)
                     circle_end_Y = end_y - self.node_radius * math.sin(arrow_angle)
-        
-                    axes.add_artist(plt_patches.FancyArrowPatch((circle_start_X, circle_start_Y), (circle_end_X, circle_end_Y)))
-                else:
-                    continue
+
+                    dx = circle_end_X - circle_start_X
+                    dy = circle_end_Y - circle_start_Y
+
+                    if self.__ADJACENCY_MATRIX[j, i] == 1:
+                        axes.arrow(circle_start_X, circle_start_Y, dx, dy, length_includes_head=True, head_width=13, head_length=13, linewidth=1)
+                        axes.arrow(circle_end_X, circle_end_Y, -dx, -dy, length_includes_head=True, head_width=13, head_length=13, linewidth=0)
+                    else:
+                        axes.arrow(circle_start_X, circle_start_Y, dx, dy, length_includes_head=True, head_width=13, head_length=13, linewidth=1)
+
 
     def plot_graph(self, vertical_margin: int, horizontal_margin: int) -> None:
         X, Y, VALUES = self.__calculate_nodes_coords(vertical_margin, horizontal_margin)
         VERTICES_PREPARED = self.__map_vertices_cords(X, Y, VALUES)
 
         figure, axes = plt.subplots()
-        
+      
         for value, cords in VERTICES_PREPARED.items():
             axes.add_artist(plt_patches.Circle(cords, self.node_radius, fill=False))
             plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
