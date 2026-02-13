@@ -1,0 +1,2 @@
+                    # print(f"[DEBUG] Angle calculation for {i}->{j}: tan = {tan_arrow_angle:.4f} (dy={Y_distance:.2f}, dx={X_distance:.2f})")
+                    # print(f"[DEBUG] Start cords: ({start_x}, {start_y}), End cords: ({end_x}, {end_y})")

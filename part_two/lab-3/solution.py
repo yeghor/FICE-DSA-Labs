@@ -1,9 +1,26 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as plt_patches
 
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 class GraphEngine:
+    def __map_vertices_cords(self, X: List[List[float]], Y: List[List[float]], VALUES: List[int]) -> Dict[int, Tuple]:
+        """
+        Maps level shaped cords that returns __calculate_nodes_coords method
+        Out: dict, where key is a vertice value and value is a tuple of (x, y) cords
+        """
+        out = {}
+
+        X_flatten, Y_flatten, VALUES_flatten = [], [], []
+        
+        for X_level, Y_level, VALUES_level in zip(X, Y, VALUES):
+            for vertice_data in zip(X_level, Y_level, VALUES_level):
+                out[vertice_data[2]] = vertice_data[0], vertice_data[1]
+
+        return out
+
     def __init__(self, node_radius: int = 30):
         self.__node_radius = node_radius
         self.__node_diameter = node_radius * 2
@@ -20,7 +37,7 @@ class GraphEngine:
         ADJACENCY_MATRIX *= K # Scalar multiplying
         BOOLEAN_ROUNDED_ADJACENCY_MATRIX = ADJACENCY_MATRIX > 1.0 # Creating boolean matrix whether element larger or 
         self.__ADJACENCY_MATRIX = BOOLEAN_ROUNDED_ADJACENCY_MATRIX.astype(int) # Converting boolean matrix to integer matrix
-
+        print(ADJACENCY_MATRIX.shape)
     @property
     def ADJACENCY_MATRIX(self) -> np.array:
         return self.__ADJACENCY_MATRIX
@@ -49,16 +66,16 @@ class GraphEngine:
         """The function checks if given margins are valid regarding to node radius"""
         raise Exception("Not implemented yet")
 
-    def __calculate_nodes_coords(self, vertical_margin: int, horizontal_margin: int) -> Tuple[List[List[int | float]], List[List[int | float]]]:
+    def __calculate_nodes_coords(self, vertical_margin: int, horizontal_margin: int) -> Tuple[List[List[float]], List[List[float]], List[List[float]]]:
         """Returns X, y lists of coords separated by levels that is stored in tuple \n Margins must be validated"""
 
         # Base case
         if self.__VERTICES == 1:
             return [0], [0]
 
-        X, Y = [], []
+        X, Y, VALUES = [], [], []
 
-        # Individual lehel height including vertical margin
+        # Individual level height including vertical margin
         level_height = self.__node_diameter + vertical_margin * 2
 
         # Since our graph must have triangulum shape, it's depth is a ceil of binary logarithm of number of vertices
@@ -82,6 +99,8 @@ class GraphEngine:
         # We store used nodes to track whether we will went out of self.__VERTICES number of all graph nodes limit on last level
         used_nodes = 0
 
+        current_vertice_value = 0
+
         # In this loop, level is inverted, e.g. levels=7; level=6 the true level is 2
         true_level = 1
         for level in range(levels, 0, -1):
@@ -94,11 +113,11 @@ class GraphEngine:
 
             # This condition is only true on last level
             # self.__VERTICES - used_nodes is a maximum nodes that engine can draw on the current level
-            # If its lower that current level nodes amount, we limit current level max nodes with maximum nodes allowed on the current level, which is self.__VERTICES - used_nodes
+            # If its lower that the current level nodes amount, we limit current level max nodes with maximum nodes allowed on the current level, which is self.__VERTICES - used_nodes
             if self.__VERTICES - used_nodes  < level_n_vertices:
                 level_n_vertices = self.__VERTICES - used_nodes
 
-            level_vertices_X_cords, level_vertices_Y_cords = [], []
+            level_vertices_X_cords, level_vertices_Y_cords, level_vertices_values = [], [], []
             # Second buffer that is placed right after the level_left_buffer_space
             # When node is placed, the buffer is shifting to the next node start
             level_occupation_after_buffer = 0
@@ -115,10 +134,13 @@ class GraphEngine:
 
                 level_vertices_X_cords.append(vertice_X)
                 level_vertices_Y_cords.append(vertice_Y)
+                level_vertices_values.append(current_vertice_value)
 
+                current_vertice_value += 1
 
             X.append(level_vertices_X_cords)
             Y.append(level_vertices_Y_cords)
+            VALUES.append(level_vertices_values)
 
             used_nodes += level_n_vertices
 
@@ -129,16 +151,64 @@ class GraphEngine:
             level_left_buffer_space -= self.__node_diameter + horizontal_margin * 2
 
         
-        return X, Y
+        return X, Y, VALUES
 
-    def __plot_node_arrows(self, X_cords: List[int], y_cords: List[int]) -> None:
-        raise Exception("Not implemented yet, will use matplotlib FancyArrowPatch feature")
+    def __plot_node_arrows(self, axes, VERTICES_PREPARED: Dict[int, List[float]]) -> None:
+        """
+        Note that X_cords and Y_cords must be flattened arrays \n
+        Order of coordinates must be left to right starting on level 1 \n
+        Find circle dot at specific angle on a boundary - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
+        """
+
+        adjacency_matrix_shape = self.__ADJACENCY_MATRIX.shape
+
+        for i in range(adjacency_matrix_shape[0]):
+            for j in range(adjacency_matrix_shape[1]):
+                if self.__ADJACENCY_MATRIX[i, j] == 1:
+                    # Base case
+                    if i == j:
+                        continue
+
+                    start_cords, end_cords = VERTICES_PREPARED[i], VERTICES_PREPARED[j]
+                    start_x, start_y = start_cords[0], start_cords[1]
+                    end_x, end_y = end_cords[0], end_cords[1]
+
+                    X_distance = end_x - start_x
+                    Y_distance = end_y - start_y
+
+                    # Usin atan2, instead of atan!
+                    # Because distances can be negative
+                    # That's why, when we compute angle tan, we can loose directions information
+                    # e. g. -1/-1 = 1
+                    # Also, atan2 handles edge cases, when y or x distances are equal to zero
+                    arrow_angle = math.atan2(Y_distance, X_distance) 
+
+                    circle_start_X = start_x + self.node_radius * math.cos(arrow_angle)
+                    circle_start_Y = start_y + self.node_radius * math.sin(arrow_angle)
+
+                    circle_end_X = end_x - self.node_radius * math.cos(arrow_angle)
+                    circle_end_Y = end_y - self.node_radius * math.sin(arrow_angle)
+        
+                    axes.add_artist(plt_patches.FancyArrowPatch((circle_start_X, circle_start_Y), (circle_end_X, circle_end_Y)))
+                else:
+                    continue
 
     def plot_graph(self, vertical_margin: int, horizontal_margin: int) -> None:
-        X, Y = self.__calculate_nodes_coords(vertical_margin, horizontal_margin)
+        X, Y, VALUES = self.__calculate_nodes_coords(vertical_margin, horizontal_margin)
+        VERTICES_PREPARED = self.__map_vertices_cords(X, Y, VALUES)
 
-        print(f"X coords: {X}")
-        print(f"Y coords: {Y}")
+        figure, axes = plt.subplots()
+        
+        for value, cords in VERTICES_PREPARED.items():
+            axes.add_artist(plt_patches.Circle(cords, self.node_radius, fill=False))
+            plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
+
+        self.__plot_node_arrows(axes, VERTICES_PREPARED)
+
+        plt.xlim(0, 1500)
+        plt.ylim(0, 1000)
+        plt.show()
+    
 
 if __name__ == "__main__":
     ge = GraphEngine(node_radius=50) # diameter is 100
