@@ -5,8 +5,17 @@ import matplotlib.patches as plt_patches
 
 from typing import Tuple, List, Dict
 
+PreparedVertices = Dict[int, Tuple[float, float]]
+
 class GraphEngine:
-    def __map_vertices_cords(self, X: List[List[float]], Y: List[List[float]], VALUES: List[int]) -> Dict[int, Tuple]:
+    @staticmethod
+    def __validate_margins(*margins) -> bool:
+        if any([margin < 0 for margin in margins]):
+            return False
+        return True
+
+
+    def __map_vertices_cords(self, X: List[List[float]], Y: List[List[float]], VALUES: List[int]) -> PreparedVertices:
         """
         Maps level shaped cords that returns __calculate_nodes_coords method
         Out: dict, where key is a vertice value and value is a tuple of (x, y) cords
@@ -19,6 +28,16 @@ class GraphEngine:
 
         return out
 
+
+    def __define_plot_limits(self, VERTICES_PREPARED: PreparedVertices) -> Tuple[int, int, int, int]:
+        """Computes plot (x, y) limits regarding to node radius"""
+        cords = VERTICES_PREPARED.values() 
+        X_cords = [cord_pair[0] for cord_pair in cords]
+        Y_cords = [cord_pair[1] for cord_pair in cords]
+
+        return min(X_cords) - self.node_diameter, max(X_cords) + self.node_diameter, min(Y_cords) - self.node_diameter, max(Y_cords) + self.node_diameter
+
+
     def __init__(self, node_radius: int = 30):
         self.__node_radius = node_radius
         self.__node_diameter = node_radius * 2
@@ -28,7 +47,7 @@ class GraphEngine:
 
         np.random.seed(int(f"{self.__n_1}{self.__n_2}{self.__n_3}{self.__n_4}")) # Random seed to make results reproducable 
 
-        self.__VERTICES = 17
+        self.__VERTICES = 6
 
         ADJACENCY_MATRIX = np.random.uniform(0.0, 2.0, (self.__VERTICES, self.__VERTICES)) # Random graph adjacency matrix in range [0, 2]
         K = 1.0 - self.__n_3 * 0.02 - self.__n_4 * 0.005 - 0.25 # Computing K by given formula
@@ -36,21 +55,27 @@ class GraphEngine:
         BOOLEAN_ROUNDED_ADJACENCY_MATRIX = ADJACENCY_MATRIX > 1.0 # Creating boolean matrix whether element larger or 
         self.__ADJACENCY_MATRIX = BOOLEAN_ROUNDED_ADJACENCY_MATRIX.astype(int) # Converting boolean matrix to integer matrix
         print(ADJACENCY_MATRIX.shape)
+
+
     @property
     def ADJACENCY_MATRIX(self) -> np.array:
         return self.__ADJACENCY_MATRIX
+
 
     @property
     def VERTICES(self) -> int:
         return self.__VERTICES
 
+
     @property
     def node_diameter(self) -> int:
         return self.__node_diameter
 
+
     @property
     def node_radius(self) -> int:
         return self.__node_radius
+
 
     @node_radius.setter
     def node_radius(self, val: int) -> None:
@@ -60,9 +85,6 @@ class GraphEngine:
         self.__node_radius = val
         self.__node_diameter = val * 2
 
-    def __validate_margins(vertical_margin: int, horizontal_margin: int) -> bool:
-        """The function checks if given margins are valid regarding to node radius"""
-        raise Exception("Not implemented yet")
 
     def __calculate_nodes_coords(self, vertical_margin: int, horizontal_margin: int) -> Tuple[List[List[float]], List[List[float]], List[List[float]]]:
         """Returns X, y lists of coords separated by levels that is stored in tuple \n Margins must be validated"""
@@ -151,11 +173,10 @@ class GraphEngine:
         
         return X, Y, VALUES
 
-    def __plot_node_arrows(self, axes, VERTICES_PREPARED: Dict[int, List[float]]) -> None:
+
+    def __plot_node_arrows(self, axes, VERTICES_PREPARED: PreparedVertices) -> None:
         """
-        Note that X_cords and Y_cords must be flattened arrays \n
-        Order of coordinates must be left to right starting on level 1 \n
-        Find circle dot at specific angle on a boundary - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
+        Find circle dot at specific angle on a boundary explanation - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
         """
 
         adjacency_matrix_shape = self.__ADJACENCY_MATRIX.shape
@@ -163,11 +184,14 @@ class GraphEngine:
         for i in range(adjacency_matrix_shape[0]):
             for j in range(adjacency_matrix_shape[1]):
                 if self.__ADJACENCY_MATRIX[i, j] == 1:
-                    # Base case
-                    if i == j:
-                        continue
-
                     start_cords, end_cords = VERTICES_PREPARED[i], VERTICES_PREPARED[j]
+
+                    # Base case, self looping arrow
+                    if i == j:
+                        vertice_x, vertice_y = start_cords[0], start_cords[1]
+                        arrowstyle="->, head_length=5, head_width=5"
+                        axes.add_artist(plt_patches.FancyArrowPatch((vertice_x, vertice_y+self.node_radius/2), (vertice_x-self.node_radius/2, vertice_y), arrowstyle=arrowstyle, connectionstyle="arc3, rad=3", alpha=0.6))
+
                     start_x, start_y = start_cords[0], start_cords[1]
                     end_x, end_y = end_cords[0], end_cords[1]
 
@@ -191,32 +215,37 @@ class GraphEngine:
                     dy = circle_end_Y - circle_start_Y
 
                     if self.__ADJACENCY_MATRIX[j, i] == 1:
-                        axes.arrow(circle_start_X, circle_start_Y, dx, dy, length_includes_head=True, head_width=13, head_length=13, linewidth=1)
-                        axes.arrow(circle_end_X, circle_end_Y, -dx, -dy, length_includes_head=True, head_width=13, head_length=13, linewidth=0)
+                        arrowstyle="<->, head_length=5, head_width=5"
                     else:
-                        axes.arrow(circle_start_X, circle_start_Y, dx, dy, length_includes_head=True, head_width=13, head_length=13, linewidth=1)
+                        arrowstyle="->, head_length=5, head_width=5"
+
+                    axes.add_artist(plt_patches.FancyArrowPatch((circle_start_X, circle_start_Y), (circle_end_X, circle_end_Y), arrowstyle=arrowstyle, connectionstyle="arc3, rad=0.2", alpha=0.6))
 
 
     def plot_graph(self, vertical_margin: int, horizontal_margin: int) -> None:
+        if not self.__validate_margins(vertical_margin, horizontal_margin):
+            raise ValueError("Invalid Margins! Must be greater or equal to 0")
+
         X, Y, VALUES = self.__calculate_nodes_coords(vertical_margin, horizontal_margin)
         VERTICES_PREPARED = self.__map_vertices_cords(X, Y, VALUES)
 
         figure, axes = plt.subplots()
-      
+
         for value, cords in VERTICES_PREPARED.items():
-            axes.add_artist(plt_patches.Circle(cords, self.node_radius, fill=False))
+            axes.add_artist(plt_patches.Circle(cords, self.node_radius, fill=True, color='#6690FF', alpha=1, aa=True))
             plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
 
         self.__plot_node_arrows(axes, VERTICES_PREPARED)
 
-        plt.xlim(0, 1500)
-        plt.ylim(0, 1000)
+        plot_limits = self.__define_plot_limits(VERTICES_PREPARED)
+
+        plt.xlim(plot_limits[0], plot_limits[1])
+        plt.ylim(plot_limits[2], plot_limits[3])
         plt.axis("off")
         plt.title(f"{self.__VERTICES} nodes Graph visualization")
-        plt.savefig(f"./graph-{self.VERTICES}-nodes.png")
         plt.show()
     
 
 if __name__ == "__main__":
-    ge = GraphEngine(node_radius=50) # diameter is 100
-    ge.plot_graph(25, 25) # node occupation will be 100x100 square
+    ge = GraphEngine(node_radius=100)
+    ge.plot_graph(100, 75)
