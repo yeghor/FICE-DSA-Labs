@@ -69,7 +69,7 @@ if __name__ == "__main__":
     elif not -1 <= input_x <= 1:
         raise ValueError("Invalid x value. Arccos handle x only in [-1, 1] range!")
 
-    approximator = ArccosApproximator(n=n, x=input_x)
+    approximator = ArccosApproximator(n=n, x=0.3)
 
     for method in ["return", "descent", "partially"]:
         print(f"Starting {method} testing!")
@@ -87,26 +87,29 @@ if __name__ == "__main__":
 
         print(f"\n================\n")
 
-    X, y = [_ for _ in np.linspace(-1, 1, 100)], []
 
-    plot_n = int(input("Enter plot n in range (integer in range [1, 994]): "))
-    approximator.n = plot_n
+    plot_n = int(input("Enter plot's n range (integer in range [1, 10]): "))
 
-    if not 1 <= plot_n <= 994:
+    if not 1 <= plot_n <= 10:
         raise ValueError("Invalid n value entered!")
 
-    for x in X:
-        approximator.x = x
+    for n in range(0, plot_n+1):
+        x, y = [_ for _ in np.linspace(-1, 1, 1000)], []
+        approximator.n = n
+        for x_ in x:
+            approximator.x = x_
 
-        approx_res = approximator.approximate(recursion_method="return")
-        true_res = math.acos(x)
+            approx_res = approximator.approximate(recursion_method="return")
+            true_res = math.acos(x_)
 
-        y.append(abs(approx_res - true_res))
-    
-    plt.plot(X, y)
+            y.append(abs(approx_res - true_res))
+        
+        plt.plot(x, y, label=f"n={n}")
+
     plt.grid(True)
     plt.ylabel("Approx error")
     plt.xlabel("x")
-    plt.title(f"Method: return | n: {approximator.n}")
-
+    plt.title(f"Arccos approximation")
+    plt.legend()
+    plt.savefig("visualizations/arccos_approximation.png")
     plt.show()

@@ -35,7 +35,7 @@ class GraphEngine:
         X_cords = [cord_pair[0] for cord_pair in cords]
         Y_cords = [cord_pair[1] for cord_pair in cords]
 
-        return min(X_cords) - self.node_diameter, max(X_cords) + self.node_diameter, min(Y_cords) - self.node_diameter, max(Y_cords) + self.node_diameter
+        return min(X_cords) - self.node_diameter * 1.5, max(X_cords) + self.node_diameter * 1.5, min(Y_cords) - self.node_diameter * 1.5, max(Y_cords) + self.node_diameter * 1.5
 
 
     def __init__(self, node_radius: int = 30):
@@ -47,14 +47,13 @@ class GraphEngine:
 
         np.random.seed(int(f"{self.__n_1}{self.__n_2}{self.__n_3}{self.__n_4}")) # Random seed to make results reproducable 
 
-        self.__VERTICES = 6
+        self.__VERTICES = 10
 
         ADJACENCY_MATRIX = np.random.uniform(0.0, 2.0, (self.__VERTICES, self.__VERTICES)) # Random graph adjacency matrix in range [0, 2]
         K = 1.0 - self.__n_3 * 0.02 - self.__n_4 * 0.005 - 0.25 # Computing K by given formula
         ADJACENCY_MATRIX *= K # Scalar multiplying
         BOOLEAN_ROUNDED_ADJACENCY_MATRIX = ADJACENCY_MATRIX > 1.0 # Creating boolean matrix whether element larger or 
         self.__ADJACENCY_MATRIX = BOOLEAN_ROUNDED_ADJACENCY_MATRIX.astype(int) # Converting boolean matrix to integer matrix
-        print(ADJACENCY_MATRIX.shape)
 
 
     @property
@@ -174,7 +173,7 @@ class GraphEngine:
         return X, Y, VALUES
 
 
-    def __plot_node_arrows(self, axes, VERTICES_PREPARED: PreparedVertices) -> None:
+    def __plot_node_arrows(self, axes, VERTICES_PREPARED: PreparedVertices, directed: bool = True) -> None:
         """
         Find circle dot at specific angle on a boundary explanation - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
         """
@@ -189,8 +188,9 @@ class GraphEngine:
                     # Base case, self looping arrow
                     if i == j:
                         vertice_x, vertice_y = start_cords[0], start_cords[1]
-                        arrowstyle="->, head_length=5, head_width=5"
+                        arrowstyle="->, head_length=5, head_width=5" if directed else "-"
                         axes.add_artist(plt_patches.FancyArrowPatch((vertice_x, vertice_y+self.node_radius/2), (vertice_x-self.node_radius/2, vertice_y), arrowstyle=arrowstyle, connectionstyle="arc3, rad=3", alpha=0.6))
+                        continue
 
                     start_x, start_y = start_cords[0], start_cords[1]
                     end_x, end_y = end_cords[0], end_cords[1]
@@ -211,18 +211,20 @@ class GraphEngine:
                     circle_end_X = end_x - self.node_radius * math.cos(arrow_angle)
                     circle_end_Y = end_y - self.node_radius * math.sin(arrow_angle)
 
-                    dx = circle_end_X - circle_start_X
-                    dy = circle_end_Y - circle_start_Y
+                    # dx = circle_end_X - circle_start_X
+                    # dy = circle_end_Y - circle_start_Y
 
                     if self.__ADJACENCY_MATRIX[j, i] == 1:
-                        arrowstyle="<->, head_length=5, head_width=5"
+                        arrowstyle="<->, head_length=5, head_width=5" if directed else "-"
                     else:
-                        arrowstyle="->, head_length=5, head_width=5"
+                        arrowstyle="->, head_length=5, head_width=5" if directed else "-"
 
-                    axes.add_artist(plt_patches.FancyArrowPatch((circle_start_X, circle_start_Y), (circle_end_X, circle_end_Y), arrowstyle=arrowstyle, connectionstyle="arc3, rad=0.2", alpha=0.6))
+                    connectionstyle="arc3, rad=0.2"
+
+                    axes.add_artist(plt_patches.FancyArrowPatch((circle_start_X, circle_start_Y), (circle_end_X, circle_end_Y), arrowstyle=arrowstyle, connectionstyle=connectionstyle, alpha=0.6))
 
 
-    def plot_graph(self, vertical_margin: int, horizontal_margin: int) -> None:
+    def plot_graph(self, vertical_margin: int, horizontal_margin: int, directed: bool = True) -> None:
         if not self.__validate_margins(vertical_margin, horizontal_margin):
             raise ValueError("Invalid Margins! Must be greater or equal to 0")
 
@@ -235,17 +237,20 @@ class GraphEngine:
             axes.add_artist(plt_patches.Circle(cords, self.node_radius, fill=True, color='#6690FF', alpha=1, aa=True))
             plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
 
-        self.__plot_node_arrows(axes, VERTICES_PREPARED)
+        self.__plot_node_arrows(axes, VERTICES_PREPARED, directed)
 
         plot_limits = self.__define_plot_limits(VERTICES_PREPARED)
 
         plt.xlim(plot_limits[0], plot_limits[1])
         plt.ylim(plot_limits[2], plot_limits[3])
         plt.axis("off")
-        plt.title(f"{self.__VERTICES} nodes Graph visualization")
+        plt.title(f"{self.__VERTICES} nodes {"directed" if directed else "not directed"} graph")
         plt.show()
     
 
 if __name__ == "__main__":
     ge = GraphEngine(node_radius=100)
-    ge.plot_graph(100, 75)
+    print("Plotting not directed graph...")
+    ge.plot_graph(100, 100, False)
+    print("Plotting directed graph")
+    ge.plot_graph(100, 100, True)
