@@ -62,7 +62,7 @@ class GraphEngine:
             int(f"{self._n_1}{self._n_2}{self._n_3}{self._n_4}")
         )  # Random seed to make results reproducable
 
-        self._VERTICES = 11
+        self._VERTICES = 9
 
         ADJACENCY_MATRIX = np.random.uniform(
             0.0, 2.0, (self._VERTICES, self._VERTICES)

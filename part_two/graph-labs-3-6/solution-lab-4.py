@@ -48,13 +48,30 @@ class GraphEngineExtended(GraphEngine):
 
     def isolated_vertices(self) -> List[int]:
         """Uses vertices_powers method"""
-        pass
+        
+        isolated_vertices = []
 
+        for row in range(len(self._ADJACENCY_MATRIX)):
+            if int(sum(self._ADJACENCY_MATRIX[row])) != 0:
+                continue
+                
+            isolated = True
+
+            for refers in self._ADJACENCY_MATRIX[:, row]:
+                if refers == 1:
+                    isolated = False
+                    break
+            
+            if isolated:
+                isolated_vertices.append(row)
+            
+        return isolated_vertices
 
 if __name__ == "__main__":
     ge = GraphEngineExtended(
         koef_template=Template("1.0 - $first * 0.01 - $second * 0.01 - 0.3"),
         node_radius=100,
     )
-    print(ge.vertices_powers(directed=True))
+    print(ge.isolated_vertices())
     ge.plot_graph(100, 100, directed=True)
+    
