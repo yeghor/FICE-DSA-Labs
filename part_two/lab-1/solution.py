@@ -3,6 +3,7 @@ import typing
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class ArccosApproximator:
     def __init__(self, n: int, x: float) -> None:
         self.n = n
@@ -10,44 +11,46 @@ class ArccosApproximator:
 
     def __approx_on_return(self, i: int) -> float:
         cur = None
-        
+
         if i == 0:
             return self.x, self.x
         else:
-            prev, sum_ = self.__approx_on_return(i-1)
-            cur = prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            prev, sum_ = self.__approx_on_return(i - 1)
+            cur = prev * (2 * i - 1) ** 2 * self.x**2 / (2 * i * (2 * i + 1))
 
         return cur, sum_ + cur
 
     def __approx_on_descent(self, i: int, prev: float, sum_: float) -> float:
         res = None
-        
+
         if i == 0:
-            res = self.__approx_on_descent(i+1, self.x, self.x)
+            res = self.__approx_on_descent(i + 1, self.x, self.x)
         elif i > self.n:
             return sum_
         else:
-            cur = prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
-            res = self.__approx_on_descent(i+1, cur, sum_+cur)
+            cur = prev * (2 * i - 1) ** 2 * self.x**2 / (2 * i * (2 * i + 1))
+            res = self.__approx_on_descent(i + 1, cur, sum_ + cur)
 
         return res
 
     def __approx_partially(self, i: int, prev: float) -> float:
         sum_ = None
         cur = 0
-        
+
         if i == 0:
             cur = self.x
-            sum_ = self.__approx_partially(i+1, self.x)
-        elif i >= self.n:
-            return prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
+            sum_ = self.__approx_partially(i + 1, self.x)
+        elif i == self.n:
+            return prev * (2 * i - 1) ** 2 * self.x**2 / (2 * i * (2 * i + 1))
         else:
-            cur = prev * (2*i - 1)**2 * self.x**2 / (2*i * (2*i + 1))
-            sum_ = self.__approx_partially(i+1, cur)
+            cur = prev * (2 * i - 1) ** 2 * self.x**2 / (2 * i * (2 * i + 1))
+            sum_ = self.__approx_partially(i + 1, cur)
 
         return cur + sum_
 
-    def approximate(self, recursion_method: typing.Literal["return", "descent", "partially"]) -> float:
+    def approximate(
+        self, recursion_method: typing.Literal["return", "descent", "partially"]
+    ) -> float:
         term = math.pi / 2
 
         match recursion_method:
@@ -59,6 +62,7 @@ class ArccosApproximator:
                 return term - self.__approx_on_descent(0, 0, 0)
             case "partially":
                 return term - self.__approx_partially(0, 0)
+
 
 if __name__ == "__main__":
     input_x = float(input("Enter x value (float in range [-1, 1]): "))
@@ -74,7 +78,7 @@ if __name__ == "__main__":
     for method in ["return", "descent", "partially"]:
         print(f"Starting {method} testing!")
 
-        for n_ in range(1, n+1):
+        for n_ in range(1, n + 1):
             approximator.n = n_
 
             approx_res = approximator.approximate(recursion_method=method)
@@ -87,13 +91,12 @@ if __name__ == "__main__":
 
         print(f"\n================\n")
 
-
     plot_n = int(input("Enter plot's n range (integer in range [1, 10]): "))
 
     if not 1 <= plot_n <= 10:
         raise ValueError("Invalid n value entered!")
 
-    for n in range(0, plot_n+1):
+    for n in range(1, plot_n + 1):
         x, y = [_ for _ in np.linspace(-1, 1, 1000)], []
         approximator.n = n
         for x_ in x:
@@ -103,7 +106,7 @@ if __name__ == "__main__":
             true_res = math.acos(x_)
 
             y.append(abs(approx_res - true_res))
-        
+
         plt.plot(x, y, label=f"n={n}")
 
     plt.grid(True)
@@ -111,5 +114,5 @@ if __name__ == "__main__":
     plt.xlabel("x")
     plt.title(f"Arccos approximation")
     plt.legend()
-    plt.savefig("visualizations/arccos_approximation.png")
+    # plt.savefig("visualizations/arccos_approximation.png")
     plt.show()

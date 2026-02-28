@@ -2,10 +2,12 @@ from __future__ import annotations
 import random
 import string
 
+
 class Node:
     """
     Doubly connected linked list node
     """
+
     def __init__(self, val: str, next_: Node | None = None, prev: Node | None = None):
         if len(val) > 5:
             raise ValueError("Maximum value length exceeded!")
@@ -13,12 +15,13 @@ class Node:
         self.val = val
         self.next = next_
         self.prev = prev
-    
+
     def __str__(self):
-        return f'[{self.val}]'
+        return f"[{self.val}]"
 
     def __repr__(self):
-        return f'[{self.val}]'
+        return f"[{self.val}]"
+
 
 class LinkedList:
     @staticmethod
@@ -52,7 +55,7 @@ class LinkedList:
             string += f"{idx}: {curr} -> "
             curr = curr.next
             idx += 1
-        
+
         if string:
             string += "None"
         else:
@@ -73,13 +76,13 @@ class LinkedList:
         while curr:
             length += 1
             curr = curr.next
-        
+
         return length
 
     def reverse_in_place(self) -> None:
         if not self.__head:
             return
-        
+
         curr = self.__tail
 
         # Swapping list head and tail
@@ -87,12 +90,11 @@ class LinkedList:
 
         while curr:
             temp = curr.prev
-             
+
             curr.prev = curr.next
             curr.next = temp
 
             curr = temp
-
 
     def append(self, val: str) -> None:
         self.validate_value(val)
@@ -108,13 +110,13 @@ class LinkedList:
         new_node.prev = self.__tail
 
         self.__tail = new_node
-    
+
     def delete_by_value(self, val: str) -> bool:
         """Returns boolean value whether the node was deleted. \n\n Deletes only first matching value found"""
 
         if not self.__head:
             return False
-        
+
         curr = self.__head
 
         while curr:
@@ -140,8 +142,9 @@ class LinkedList:
                 return True
             else:
                 curr = curr.next
-        
+
         return False
+
 
 if __name__ == "__main__":
     ll = LinkedList()
@@ -151,7 +154,7 @@ if __name__ == "__main__":
     for i in range(n):
         val = "".join([random.choice(string.ascii_lowercase) for _ in range(5)])
         ll.append(val)
-    
+
     print("Original list:")
     print(ll)
 
@@ -167,7 +170,9 @@ if __name__ == "__main__":
         if len(ll) == 0:
             break
 
-        to_delete = input("Choose value of node you want to delete (type 'exit' to finish): ")
+        to_delete = input(
+            "Choose value of node you want to delete (type 'exit' to finish): "
+        )
 
         if to_delete == "exit":
             break
