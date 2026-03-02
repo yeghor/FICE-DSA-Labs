@@ -76,13 +76,22 @@ class GraphEngine:
         BOOLEAN_ROUNDED_ADJACENCY_MATRIX: np.typing.NDArray = (
             ADJACENCY_MATRIX > 1.0
         )  # Creating boolean matrix whether element larger or
-        self._ADJACENCY_MATRIX: np.typing.NDArray = BOOLEAN_ROUNDED_ADJACENCY_MATRIX.astype(
-            int
+        self._DIRECTED_ADJACENCY_MATRIX: np.typing.NDArray = (
+            BOOLEAN_ROUNDED_ADJACENCY_MATRIX.astype(int)
         )  # Converting boolean matrix to integer matrix
+
+        # See cell №74
+        # https://github.com/ageron/handson-ml3/blob/main/math_linear_algebra.ipynb
+        # Product of a matrix by its transpose is allways a symetric matrix
+        UNDIRECTED_ADJANCENCY_MATRIX: np.typing.NDArray = (
+            self._DIRECTED_ADJACENCY_MATRIX @ self._DIRECTED_ADJACENCY_MATRIX.T
+        ) > 0.0
+        self._UNDIRECTED_ADJANCENCY_MATRIX = UNDIRECTED_ADJANCENCY_MATRIX.astype(int)
+
 
     @property
     def ADJACENCY_MATRIX(self) -> np.array:
-        return self._ADJACENCY_MATRIX
+        return self._DIRECTED_ADJACENCY_MATRIX
 
     @property
     def VERTICES(self) -> int:
@@ -207,13 +216,13 @@ class GraphEngine:
         """
         Find circle dot at specific angle on a boundary explanation - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
         """
-
-        adjacency_matrix_shape = self._ADJACENCY_MATRIX.shape
+        adjacency_matrix = self._DIRECTED_ADJACENCY_MATRIX if directed else self._UNDIRECTED_ADJANCENCY_MATRIX
+        adjacency_matrix_shape = adjacency_matrix.shape
         connections = []
 
         for i in range(adjacency_matrix_shape[0]):
             for j in range(adjacency_matrix_shape[1]):
-                if self._ADJACENCY_MATRIX[i, j] == 1:
+                if adjacency_matrix[i, j] == 1:
                     start_cords, end_cords = VERTICES_PREPARED[i], VERTICES_PREPARED[j]
 
                     # Base case, self looping arrow
@@ -255,7 +264,7 @@ class GraphEngine:
                     # dx = circle_end_X - circle_start_X
                     # dy = circle_end_Y - circle_start_Y
 
-                    if self._ADJACENCY_MATRIX[j, i] == 1:
+                    if directed and adjacency_matrix[j, i] == 1:
                         arrowstyle = (
                             "<->, head_length=5, head_width=5" if directed else "-"
                         )
@@ -266,6 +275,9 @@ class GraphEngine:
 
                     connectionstyle = "arc3, rad=0.2"
 
+                    # To prevent multiple arrows on one connection
+                    # We need only one arrow to show connection between nodes
+                    # Because we manipulate arrow styles
                     if (j, i) not in connections:
                         axes.add_artist(
                             plt_patches.FancyArrowPatch(
