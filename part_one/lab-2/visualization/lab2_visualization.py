@@ -21,7 +21,7 @@ Using known static step and arithmetic progression for nested loops S(n) = ((3 *
 nl_y = []
 
 for n in range(1, FOR_N):
-    nl_y.append(((3*n + 3*n**2) / 2) + 5*n)
+    nl_y.append(((3 * n + 3 * n**2) / 2) + 5 * n)
 
 
 plt.plot(x, dp_y, label="Dynamic Programming Approach")

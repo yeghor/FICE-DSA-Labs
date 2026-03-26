@@ -1,1 +1,1 @@
-from .ge_triangular import GraphEngine
+from .graph_engine_triangular import GraphEngine

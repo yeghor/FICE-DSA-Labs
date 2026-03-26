@@ -62,7 +62,7 @@ class GraphEngine:
             int(f"{self._n_1}{self._n_2}{self._n_3}{self._n_4}")
         )  # Random seed to make results reproducable
 
-        self._VERTICES = 9
+        self._VERTICES = 11
 
         ADJACENCY_MATRIX = np.random.uniform(
             0.0, 2.0, (self._VERTICES, self._VERTICES)
@@ -87,7 +87,6 @@ class GraphEngine:
             self._DIRECTED_ADJACENCY_MATRIX @ self._DIRECTED_ADJACENCY_MATRIX.T
         ) > 0.0
         self._UNDIRECTED_ADJANCENCY_MATRIX = UNDIRECTED_ADJANCENCY_MATRIX.astype(int)
-
 
     @property
     def ADJACENCY_MATRIX(self) -> np.array:
@@ -216,7 +215,11 @@ class GraphEngine:
         """
         Find circle dot at specific angle on a boundary explanation - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
         """
-        adjacency_matrix = self._DIRECTED_ADJACENCY_MATRIX if directed else self._UNDIRECTED_ADJANCENCY_MATRIX
+        adjacency_matrix = (
+            self._DIRECTED_ADJACENCY_MATRIX
+            if directed
+            else self._UNDIRECTED_ADJANCENCY_MATRIX
+        )
         adjacency_matrix_shape = adjacency_matrix.shape
         connections = []
 
@@ -225,7 +228,7 @@ class GraphEngine:
                 if adjacency_matrix[i, j] == 1:
                     start_cords, end_cords = VERTICES_PREPARED[i], VERTICES_PREPARED[j]
 
-                    # Base case, self looping arrow
+                    # Base case for self looping arrow
                     if i == j:
                         vertice_x, vertice_y = start_cords[0], start_cords[1]
                         arrowstyle = (
