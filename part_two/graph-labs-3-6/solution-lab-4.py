@@ -1,6 +1,7 @@
 from graph_engine import GraphEngine
 
 from typing import List, Dict, Tuple, Set
+import numpy as np
 from numpy.typing import NDArray
 from string import Template
 
@@ -98,23 +99,97 @@ class GraphEngineExtended(GraphEngine):
 
         return isolated_vertices
 
-    def _dfs_paths_search(self, paths: Set, path: List, curr_path_lengh: int, full_path_length: int) -> None:
-        if curr_path_lengh == full_path_length:
-            paths.add(path)
+    def _dfs_paths_search_by_last_vertice(
+        self,
+        last_vertice: int,
+        paths: List,
+        path: List,
+        adjacency_matrix: NDArray,
+        curr_path_lengh: int,
+        full_path_length: int,
+    ) -> None:
+        if curr_path_lengh > full_path_length:
+            paths.append(
+                tuple(path[:])
+            )  # Adding a copy of path to prevent mutating inside paths list
             return
+
+        for i in range(adjacency_matrix.shape[0]):
+            if adjacency_matrix[last_vertice][i] == 0:
+                continue
+
+            path.append(int(i))
+            self._dfs_paths_search_by_last_vertice(
+                i, paths, path, adjacency_matrix, len(path), full_path_length
+            )
+            del path[-1]
+
+    def _dfs_paths_search(self, length: int, adjacency_matrix: NDArray) -> List[List[int]]:
+        paths = []
+
+        for i in range(adjacency_matrix.shape[0]):
+            self._dfs_paths_search_by_last_vertice(
+                last_vertice=i,
+                paths=paths,
+                path=[i],
+                adjacency_matrix=adjacency_matrix,
+                curr_path_lengh=1,
+                full_path_length=length
+            )
         
-        # TODO
+        return paths
 
-    def get_all_paths_by_length(self, length: int, directed: bool = True) -> List[Tuple[int]]:
-        paths = set()
+    def _get_paths_number_by_length(
+        self, adjacency_matrix: NDArray, full_path_length: int
+    ) -> int:
+        if full_path_length <= 1:
+            return int(np.sum((adjacency_matrix)))
 
+        powered_adjacency_matrix = np.copy(adjacency_matrix)
+
+        for _ in range(full_path_length - 1):
+            powered_adjacency_matrix = powered_adjacency_matrix @ adjacency_matrix
+
+        return np.sum(powered_adjacency_matrix)
+
+    def get_all_paths_by_length(
+        self, length: int, directed: bool = True
+    ) -> Tuple[int, List[Tuple[int]]]:
         correct_adjacency_matrix = self._get_adjacency_matrix(directed)
 
-        for i in range(correct_adjacency_matrix.shape[0]):
-            self._dfs_paths_search(paths=paths, path=[], curr_path_lengh=1, full_path_length=length)
+        paths = self._dfs_paths_search(length=length, adjacency_matrix=correct_adjacency_matrix)
+        n_paths = self._get_paths_number_by_length(correct_adjacency_matrix, length)
+
+        return n_paths, paths
+
+    def get_reachability_matrix(self, directed: bool = True) -> NDArray:
+        reachability_matrix = self._get_adjacency_matrix(directed)
+
+        # logical OR operation
+        reachability_matrix: NDArray = reachability_matrix | np.identity(reachability_matrix.shape[0])
+
+        n_vertices = reachability_matrix.shape[0]
+
+        for k in range(n_vertices):
+            for i in range(n_vertices):
+                for j in range(n_vertices):
+                    reachability_matrix[i, j] = reachability_matrix[i, j] or (reachability_matrix[i, k] and reachability_matrix[k, j])
+
+        return reachability_matrix
+
+    def get_strong_connectivity_matrix(self) -> NDArray:
+        pass
+
+    def get_strong_connectivity_components(self) -> List[int]:
+        pass
+
+    def plot_condensation_graph(self) -> None:
+        pass
 
 if __name__ == "__main__":
-    directed = input("Calculate first computations for directed/undirected graph? (directed or undirected): ")
+    directed = input(
+        "Calculate first computations for directed/undirected graph? (directed or undirected): "
+    )
 
     if directed == "directed":
         directed_option = True
@@ -128,29 +203,30 @@ if __name__ == "__main__":
 
     print("For directed graph")
     print("✓ Graph Powers:", ge.get_vertices_powers(directed=directed_option))
-    print("✓ Half-Powers Exit:", ge.get_halfpowers_exits(directed=directed_option))
-    print("✓ Half-Powers Entry:", ge.get_halfpowers_entry(directed=directed_option))
+    print("✓ Half-Powers Exit:", ge.get_halfpowers_exits())
+    print("✓ Half-Powers Entry:", ge.get_halfpowers_entry())
     print("✓ Is Homogeneous:", ge.is_homogeneous(directed=directed_option))
     print("✓ Isolated Vertices:", ge.get_isolated_vertices(directed=directed_option))
     print("✓ Hanging Vertices:", ge.get_hanging_vertices(directed=directed_option))
     ge.plot_graph(100, 100, directed=directed_option)
 
-    directed = input("Calculate second computations for directed/undirected graph? (directed or undirected): ")
+    directed = input(
+        "Calculate second computations for directed/undirected graph? (directed or undirected): "
+    )
 
     if directed == "directed":
         directed_option = True
     elif directed == "undirected":
         directed_option = False
 
-
-    ge.ko
-
     ge = GraphEngineExtended(
         koef_template=Template("1.0 - $first * 0.005 - $second * 0.005 - 0.27"),
         node_radius=100,
     )
 
-    print("✓ Half-Powers Exit:", ge.get_halfpowers_exits(directed=directed_option))
-    print("✓ Half-Powers Entry:", ge.get_halfpowers_entry(directed=directed_option))
+    print("✓ Half-Powers Exit:", ge.get_halfpowers_exits())
+    print("✓ Half-Powers Entry:", ge.get_halfpowers_entry())
+
+    ge.get_all_paths_by_length(length=3)
 
     ge.plot_graph(100, 100, directed=True)
