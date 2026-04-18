@@ -2,6 +2,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as plt_patches
+from matplotlib.axes import Axes
 
 from typing import Tuple, List, Dict
 from string import Template
@@ -11,12 +12,12 @@ PreparedVertices = Dict[int, Tuple[float, float]]
 
 class GraphEngine:
     @staticmethod
-    def __validate_margins(*margins) -> bool:
+    def _validate_margins(*margins) -> bool:
         if any([margin < 0 for margin in margins]):
             return False
         return True
 
-    def __map_vertices_cords(
+    def _map_vertices_cords(
         self, X: List[List[float]], Y: List[List[float]], VALUES: List[int]
     ) -> PreparedVertices:
         """
@@ -31,7 +32,7 @@ class GraphEngine:
 
         return out
 
-    def __define_plot_limits(
+    def _define_plot_limits(
         self, VERTICES_PREPARED: PreparedVertices
     ) -> Tuple[int, int, int, int]:
         """Computes plot (x, y) limits regarding to node radius"""
@@ -101,18 +102,18 @@ class GraphEngine:
         return self._node_diameter
 
     @property
-    def node_radius(self) -> int:
+    def vertex_radius(self) -> int:
         return self._node_radius
 
-    @node_radius.setter
-    def node_radius(self, val: int) -> None:
+    @vertex_radius.setter
+    def vertex_radius(self, val: int) -> None:
         if not isinstance(val, int):
             raise ValueError("Node radius must be an integer!")
 
         self._node_radius = val
         self._node_diameter = val * 2
 
-    def __calculate_nodes_coords(
+    def _calculate_nodes_coords(
         self, vertical_margin: int, horizontal_margin: int
     ) -> Tuple[List[List[float]], List[List[float]], List[List[float]]]:
         """Returns X, y lists of coords separated by levels that is stored in tuple \n Margins must be validated"""
@@ -209,22 +210,21 @@ class GraphEngine:
 
         return X, Y, VALUES
 
-    def __plot_node_arrows(
-        self, axes, VERTICES_PREPARED: PreparedVertices, directed: bool = True
+    def _plot_node_arrows(
+        self,
+        axes,
+        VERTICES_PREPARED: PreparedVertices,
+        adjacency_matrix: np.typing.NDArray,
+        directed: bool = True,
     ) -> None:
         """
         Find circle dot at specific angle on a boundary explanation - https://youtu.be/aHaFwnqH5CU?si=EgcHxdBHLg2H_qp7
         """
-        adjacency_matrix = (
-            self._DIRECTED_ADJACENCY_MATRIX
-            if directed
-            else self._UNDIRECTED_ADJANCENCY_MATRIX
-        )
-        adjacency_matrix_shape = adjacency_matrix.shape
+
         connections = []
 
-        for i in range(adjacency_matrix_shape[0]):
-            for j in range(adjacency_matrix_shape[1]):
+        for i in range(adjacency_matrix.shape[0]):
+            for j in range(adjacency_matrix.shape[1]):
                 if adjacency_matrix[i, j] == 1:
                     start_cords, end_cords = VERTICES_PREPARED[i], VERTICES_PREPARED[j]
 
@@ -236,8 +236,8 @@ class GraphEngine:
                         )
                         axes.add_artist(
                             plt_patches.FancyArrowPatch(
-                                (vertice_x, vertice_y + self.node_radius / 2),
-                                (vertice_x - self.node_radius / 2, vertice_y),
+                                (vertice_x, vertice_y + self.vertex_radius / 2),
+                                (vertice_x - self.vertex_radius / 2, vertice_y),
                                 arrowstyle=arrowstyle,
                                 connectionstyle="arc3, rad=3",
                                 alpha=0.6,
@@ -258,11 +258,15 @@ class GraphEngine:
                     # Also, atan2 handles edge cases, when y or x distances are equal to zero
                     arrow_angle = math.atan2(Y_distance, X_distance)
 
-                    circle_start_X = start_x + self.node_radius * math.cos(arrow_angle)
-                    circle_start_Y = start_y + self.node_radius * math.sin(arrow_angle)
+                    circle_start_X = start_x + self.vertex_radius * math.cos(
+                        arrow_angle
+                    )
+                    circle_start_Y = start_y + self.vertex_radius * math.sin(
+                        arrow_angle
+                    )
 
-                    circle_end_X = end_x - self.node_radius * math.cos(arrow_angle)
-                    circle_end_Y = end_y - self.node_radius * math.sin(arrow_angle)
+                    circle_end_X = end_x - self.vertex_radius * math.cos(arrow_angle)
+                    circle_end_Y = end_y - self.vertex_radius * math.sin(arrow_angle)
 
                     # dx = circle_end_X - circle_start_X
                     # dy = circle_end_Y - circle_start_Y
@@ -294,35 +298,50 @@ class GraphEngine:
 
                     connections.append((i, j))
 
+    def _add_vertex_artix(
+        self,
+        cords: Tuple[float, float],
+        vertex_radius: int,
+        value: str,
+        axes: Axes,
+        color: str,
+        alpha: float | int,
+        fill: bool,
+    ) -> None:
+        axes.add_artist(
+            plt_patches.Circle(
+                cords,
+                vertex_radius,
+                fill=fill,
+                color=color,
+                alpha=1,
+                aa=True,
+            )
+        )
+        plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
+
     def plot_graph(
         self, vertical_margin: int, horizontal_margin: int, directed: bool = True
     ) -> None:
-        if not self.__validate_margins(vertical_margin, horizontal_margin):
+        if not self._validate_margins(vertical_margin, horizontal_margin):
             raise ValueError("Invalid Margins! Must be greater or equal to 0")
 
-        X, Y, VALUES = self.__calculate_nodes_coords(vertical_margin, horizontal_margin)
-        VERTICES_PREPARED = self.__map_vertices_cords(X, Y, VALUES)
+        X, Y, VALUES = self._calculate_nodes_coords(vertical_margin, horizontal_margin)
+        VERTICES_PREPARED = self._map_vertices_cords(X, Y, VALUES)
 
         figure, axes = plt.subplots()
 
         for value, cords in VERTICES_PREPARED.items():
-            axes.add_artist(
-                plt_patches.Circle(
-                    cords,
-                    self.node_radius,
-                    fill=True,
-                    color="#6690FF",
-                    alpha=1,
-                    aa=True,
-                )
-            )
-            plt.text(
-                cords[0], cords[1], s=value, fontsize="12", ha="center", va="center"
+            self._add_vertex_artix(
+                cords, self.vertex_radius, value, axes, "#6690FF", 1, True
             )
 
-        self.__plot_node_arrows(axes, VERTICES_PREPARED, directed)
+        correct_adjacency_matrix = self._get_adjacency_matrix(directed)
+        self._plot_node_arrows(
+            axes, VERTICES_PREPARED, correct_adjacency_matrix, directed
+        )
 
-        plot_limits = self.__define_plot_limits(VERTICES_PREPARED)
+        plot_limits = self._define_plot_limits(VERTICES_PREPARED)
 
         plt.xlim(plot_limits[0], plot_limits[1])
         plt.ylim(plot_limits[2], plot_limits[3])

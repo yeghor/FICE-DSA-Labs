@@ -1,4 +1,4 @@
-from graph_engine.ge_triangular import GraphEngine
+from graph_engine import GraphEngine
 from string import Template
 
 # GraphEngine itself search in "part_two/graph-labs-3-6/graph_engine/ge_triangular.py"
