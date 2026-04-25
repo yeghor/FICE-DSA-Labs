@@ -5,6 +5,7 @@ import matplotlib.patches as plt_patches
 from matplotlib.axes import Axes
 
 from typing import Tuple, List, Dict
+from numpy.typing import NDArray
 from string import Template
 
 PreparedVertices = Dict[int, Tuple[float, float]]
@@ -16,6 +17,14 @@ class GraphEngine:
         if any([margin < 0 for margin in margins]):
             return False
         return True
+
+    def _get_adjacency_matrix(self, directed: bool) -> NDArray:
+        return (
+            self._DIRECTED_ADJACENCY_MATRIX
+            if directed
+            else self._UNDIRECTED_ADJANCENCY_MATRIX
+        )
+
 
     def _map_vertices_cords(
         self, X: List[List[float]], Y: List[List[float]], VALUES: List[int]
@@ -314,7 +323,7 @@ class GraphEngine:
                 vertex_radius,
                 fill=fill,
                 color=color,
-                alpha=1,
+                alpha=alpha,
                 aa=True,
             )
         )

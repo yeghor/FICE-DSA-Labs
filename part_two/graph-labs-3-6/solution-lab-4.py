@@ -9,17 +9,10 @@ import matplotlib.pyplot as plt
 GraphPowers = Dict[int, int]
 
 
-class GraphEngineExtended(GraphEngine):
+class GraphEngineAnalytics(GraphEngine):
     @staticmethod
     def sort_graph_powers(powers: GraphPowers) -> GraphPowers:
         return dict(sorted(powers.items(), key=lambda item: item[0], reverse=False))
-
-    def _get_adjacency_matrix(self, directed: bool) -> NDArray:
-        return (
-            self._DIRECTED_ADJACENCY_MATRIX
-            if directed
-            else self._UNDIRECTED_ADJANCENCY_MATRIX
-        )
 
     def get_vertices_powers(self, directed: bool = True) -> GraphPowers:
         """Since we store our graph in adjacency matrix, best time complexity would be O(n^2)"""
@@ -293,7 +286,7 @@ def run_test_suite(step_name, koef_formula, directed_default=True):
     else:
         is_directed = directed_default
 
-    ge = GraphEngineExtended(
+    ge = GraphEngineAnalytics(
         koef_template=Template(koef_formula),
         node_radius=100,
     )
@@ -311,11 +304,11 @@ def run_test_suite(step_name, koef_formula, directed_default=True):
         print(f"  {Style.BOLD}✓ {label:18}:{Style.END} {value}")
 
     if is_directed:
-        print(f"  {Style.BOLD}✓ Half-Powers Exit  :{Style.END} {ge.get_halfpowers_exits()}")
-        print(f"  {Style.BOLD}✓ Half-Powers Entry :{Style.END} {ge.get_halfpowers_entry()}")
+        print(f"  {Style.BOLD}✓ Half-Powers Exit (directed graph method only)  :{Style.END} {ge.get_halfpowers_exits()}")
+        print(f"  {Style.BOLD}✓ Half-Powers Entry (directed graph method only) :{Style.END} {ge.get_halfpowers_entry()}")
 
     components = ge.get_strong_connectivity_components()
-    print(f"  {Style.BOLD}✓ SCC Components    :{Style.END} {len(components)} groups found")
+    print(f"  {Style.BOLD}✓ SCC Components (non-directed graph method only)    :{Style.END} {len(components)} groups found - {components}")
 
     print(f"{Style.GREEN}▶ Generating plots...{Style.END}")
     ge.plot_condensation_graph(50, 50)
@@ -329,7 +322,6 @@ if __name__ == "__main__":
             directed_default=True
         )
 
-        # Второй этап
         run_test_suite(
             "Phase 2: Deep Analysis", 
             "1.0 - $first * 0.005 - $second * 0.005 - 0.27",
@@ -341,55 +333,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print(f"\n{Style.BLUE}Testing interrupted by user.{Style.END}")
         sys.exit(0)
-
-# if __name__ == "__main__":
-#     directed = input(
-#         "Calculate first computations for directed/undirected graph? (directed or undirected): "
-#     )
-
-#     if directed == "directed":
-#         directed_option = True
-#     elif directed == "undirected":
-#         directed_option = False
-
-#     ge = GraphEngineExtended(
-#         koef_template=Template("1.0 - $first * 0.01 - $second * 0.01 - 0.3"),
-#         node_radius=100,
-#     )
-
-#     print("For directed graph")
-#     print("✓ Graph Powers:", ge.get_vertices_powers(directed=directed_option))
-#     print("✓ Half-Powers Exit:", ge.get_halfpowers_exits())
-#     print("✓ Half-Powers Entry:", ge.get_halfpowers_entry())
-#     print("✓ Is Homogeneous:", ge.is_homogeneous(directed=directed_option))
-#     print("✓ Isolated Vertices:", ge.get_isolated_vertices(directed=directed_option))
-#     print("✓ Hanging Vertices:", ge.get_hanging_vertices(directed=directed_option))
-#     print(ge.get_strong_connectivity_components())
-#     print(ge.plot_condensation_graph(50, 50))
-
-#     ge.plot_graph(100, 100, directed=False)
-
-#     directed = input(
-#         "Calculate second computations for directed/undirected graph? (directed or undirected): "
-#     )
-
-#     if directed == "directed":
-#         directed_option = True
-#     elif directed == "undirected":
-#         directed_option = False
-
-#     ge = GraphEngineExtended(
-#         koef_template=Template("1.0 - $first * 0.005 - $second * 0.005 - 0.27"),
-#         node_radius=100,
-#     )
-
-#     print("✓ Half-Powers Exit:", ge.get_halfpowers_exits())
-#     print("✓ Half-Powers Entry:", ge.get_halfpowers_entry())
-
-#     print(ge.get_all_paths_by_length(length=3)[0])
-#     print(ge.get_reachability_matrix(directed))
-#     print(ge.get_strong_connectivity_matrix(directed))
-#     print(ge.get_strong_connectivity_components())
-#     print(ge.plot_condensation_graph(50, 50))
-
-#     ge.plot_graph(100, 100, directed=True)
