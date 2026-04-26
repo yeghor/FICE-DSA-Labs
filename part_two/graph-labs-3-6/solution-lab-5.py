@@ -45,7 +45,7 @@ class GraphEngineTraversal(GraphEngine):
         adjacency_matrix_sum = np.sum(adjacency_matrix, axis=1)  # 1d array
         return np.nonzero(adjacency_matrix_sum)[0].tolist()[0]
 
-    def _dfs(self, adjacency_matrix: NDArray, vertex: int, visited: Set, path: DFSPath):
+    def _dfs(self, adjacency_matrix: NDArray, vertex: int, visited: Set, path: DFSPath) -> None:
         if vertex in visited:
             return
 
@@ -88,7 +88,9 @@ class GraphEngineTraversal(GraphEngine):
 
                 dfs_path: List[DFSPath] = []
                 self._dfs(adjacency_matrix, new_start_vertex, seen, dfs_path)
-                all_dfs_paths.append(dfs_path)
+
+                if dfs_path:
+                    all_dfs_paths.append(dfs_path)
 
         return all_dfs_paths
 
@@ -102,10 +104,10 @@ class GraphEngineTraversal(GraphEngine):
 
         figure, axes = plt.subplots()
 
-        for dfs, color in zip(dfs_paths, self._generate_hex_colors(len(adjacency_matrix[0]))):
-            for path_item, opacity in zip(dfs, opacities):
+        for outer_order, (dfs, color) in enumerate(zip(dfs_paths, self._generate_hex_colors(len(adjacency_matrix[0])))):
+            for inner_order, (path_item, opacity) in enumerate(zip(dfs, opacities)):
                 self._add_vertex_artix(
-                    VERTICES_PREPARED[path_item], self.vertex_radius, path_item, axes, color, opacity, True
+                    VERTICES_PREPARED[path_item], self.vertex_radius, f"Vertex: {path_item}, DFS order: {outer_order}-{inner_order}", axes, color, opacity, True, fontsize=8
                 )
                         
         self._plot_node_arrows(axes, VERTICES_PREPARED, adjacency_matrix, directed)
@@ -116,7 +118,7 @@ class GraphEngineTraversal(GraphEngine):
         plt.ylim(plot_limits[2], plot_limits[3])
         plt.axis("off")
         plt.title(
-            f"{self._VERTICES} nodes {"directed" if directed else "not directed"} graph"
+            "DFS Traversal"
         )
         plt.show()
 
@@ -128,8 +130,11 @@ class GraphEngineTraversal(GraphEngine):
 
 
 if __name__ == "__main__":
+    variant_template = Template("1.0 - $first * 0.02 - $second * 0.005 - 0.25")
+    small_density_template = Template("0.6 + $first * 0.02 + $second * 0.01")
+
     ge = GraphEngineTraversal(
-        koef_template=Template("1.0 - $first * 0.01 - $second * 0.005 - 0.15"),
+        koef_template=small_density_template,
         node_radius=100,
     )
 

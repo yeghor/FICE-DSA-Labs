@@ -319,6 +319,7 @@ class GraphEngine:
         color: str,
         alpha: float | int,
         fill: bool,
+        fontsize: int = 12
     ) -> None:
         axes.add_artist(
             plt_patches.Circle(
@@ -330,7 +331,7 @@ class GraphEngine:
                 aa=True,
             )
         )
-        plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
+        plt.text(cords[0], cords[1], s=value, fontsize=str(fontsize), ha="center", va="center")
 
     def _get_prepared_vertices(self, vertical_margin: int, horizontal_margin: int) -> PreparedVertices:
         X, Y, VALUES = self._calculate_nodes_coords(vertical_margin, horizontal_margin)
