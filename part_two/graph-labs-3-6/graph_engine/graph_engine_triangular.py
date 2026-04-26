@@ -25,7 +25,6 @@ class GraphEngine:
             else self._UNDIRECTED_ADJANCENCY_MATRIX
         )
 
-
     def _map_vertices_cords(
         self, X: List[List[float]], Y: List[List[float]], VALUES: List[int]
     ) -> PreparedVertices:
@@ -99,8 +98,12 @@ class GraphEngine:
         self._UNDIRECTED_ADJANCENCY_MATRIX = UNDIRECTED_ADJANCENCY_MATRIX.astype(int)
 
     @property
-    def ADJACENCY_MATRIX(self) -> np.array:
+    def ADJACENCY_MATRIX_DIRECTED(self) -> np.array:
         return self._DIRECTED_ADJACENCY_MATRIX
+
+    @property
+    def ADJACENCY_MATRIX(self) -> np.array:
+        return self._UNDIRECTED_ADJANCENCY_MATRIX
 
     @property
     def VERTICES(self) -> int:
@@ -329,14 +332,17 @@ class GraphEngine:
         )
         plt.text(cords[0], cords[1], s=value, fontsize="12", ha="center", va="center")
 
+    def _get_prepared_vertices(self, vertical_margin: int, horizontal_margin: int) -> PreparedVertices:
+        X, Y, VALUES = self._calculate_nodes_coords(vertical_margin, horizontal_margin)
+        return self._map_vertices_cords(X, Y, VALUES)        
+
     def plot_graph(
         self, vertical_margin: int, horizontal_margin: int, directed: bool = True
     ) -> None:
         if not self._validate_margins(vertical_margin, horizontal_margin):
             raise ValueError("Invalid Margins! Must be greater or equal to 0")
 
-        X, Y, VALUES = self._calculate_nodes_coords(vertical_margin, horizontal_margin)
-        VERTICES_PREPARED = self._map_vertices_cords(X, Y, VALUES)
+        VERTICES_PREPARED = self._get_prepared_vertices(vertical_margin, horizontal_margin)
 
         figure, axes = plt.subplots()
 
