@@ -13,9 +13,7 @@ PathItem = int
 
 # BFS
 BFSPathItem = List[PathItem]
-
-# Each outer Dict key stands for step in BFS
-BFSPath = Dict[int, BFSPathItem]
+BFSPath = List[List[BFSPathItem]]
 
 
 # DFS
@@ -41,9 +39,12 @@ class GraphEngineTraversal(GraphEngine):
             # https://stackoverflow.com/questions/13998901/generating-a-random-hex-color-in-python
             yield "#" + "%06x" % random.randint(0, 0xFFFFFF)
 
-    def _find_start_vertices(self, adjacency_matrix: NDArray) -> int:
+    def _find_start_vertices(self, adjacency_matrix: NDArray) -> List[int]:
         adjacency_matrix_sum = np.sum(adjacency_matrix, axis=1)  # 1d array
-        return np.nonzero(adjacency_matrix_sum)[0].tolist()[0]
+        return np.nonzero(adjacency_matrix_sum)[0].tolist()
+
+    def _find_start_vertex(self, adjacency_matrix: NDArray) -> int:
+        return self._find_start_vertices(adjacency_matrix)[0]
 
     def _dfs(self, adjacency_matrix: NDArray, vertex: int, visited: Set, path: DFSPath) -> None:
         if vertex in visited:
@@ -56,19 +57,11 @@ class GraphEngineTraversal(GraphEngine):
             if value == 0 or next_vertex == vertex:
                 continue
 
-            if vertex == 1 and next_vertex == 10:
-                print(vertex, next_vertex)
-                print(value)
-
             self._dfs(adjacency_matrix, next_vertex, visited, path)
 
-    def _bfs(
-        self, adjacency_matrix: NDArray, vertex: int, visited: Set, path: List[int]
-    ):
-        pass
 
     def _get_dfs(self, adjacency_matrix: NDArray) -> List[DFSPath]:
-        start_vertex = self._find_start_vertices(adjacency_matrix)
+        start_vertex = self._find_start_vertex(adjacency_matrix)
 
         all_dfs_paths: List[DFSPath] = []
 
@@ -94,20 +87,66 @@ class GraphEngineTraversal(GraphEngine):
 
         return all_dfs_paths
 
-    def plot_dfs(self, vertical_margin: int, horizontal_margin: int, directed: bool = True) -> None:
+    def _get_bfs(self, directed: bool = True) -> List[BFSPath]:
+        adjacency_matrix = self._get_adjacency_matrix(directed)
+        start_vertices = self._find_start_vertices(adjacency_matrix)
+
+        bfs_traversal = []
+        seen = set()
+
+        for start_vertex in start_vertices:
+            if start_vertex in seen:
+                continue
+
+            if len(seen) == len(adjacency_matrix[0]):
+                break
+
+            path: List[Tuple[int, int]] = []
+            queue: List[Tuple[int, int]] = [[1, start_vertex]] # bfs step -> vertex
+            seen.add(start_vertex)
+
+            while queue:
+                queue_vertex = queue.pop()
+
+                curr_step = queue_vertex[0]
+                vertex = queue_vertex[1]
+
+                while curr_step > len(path):
+                    path.append([])
+
+                path[curr_step-1].append(vertex)
+
+                for next_vertex in np.nonzero(adjacency_matrix[queue_vertex[1]])[0].tolist():
+                    if next_vertex not in seen:
+                        queue.insert(0, (curr_step+1, next_vertex))
+                        seen.add(next_vertex)
+
+            bfs_traversal.append(path)
+
+        return bfs_traversal
+
+
+    def plot_dfs(self, vertical_margin: int, horizontal_margin: int, path_logs: bool = True, directed: bool = True) -> None:
         adjacency_matrix = self._get_adjacency_matrix(directed=directed)
-        dfs_paths = self._get_dfs(adjacency_matrix)
-        print(dfs_paths)
+        dfs_traversal = self._get_dfs(adjacency_matrix)
+
         VERTICES_PREPARED = self._get_prepared_vertices(vertical_margin, horizontal_margin)
 
         opacities = self._compute_dfs_opacities(n_vertex=len(adjacency_matrix[0]))
 
         figure, axes = plt.subplots()
 
-        for outer_order, (dfs, color) in enumerate(zip(dfs_paths, self._generate_hex_colors(len(adjacency_matrix[0])))):
+        if path_logs:
+            print("Staring DFS Traversal:")
+
+        for outer_order, (dfs, color) in enumerate(zip(dfs_traversal, self._generate_hex_colors(len(adjacency_matrix[0])))):
+    
+            if path_logs:
+                print(f"Path №{outer_order+1} -> {dfs}")
+
             for inner_order, (path_item, opacity) in enumerate(zip(dfs, opacities)):
                 self._add_vertex_artix(
-                    VERTICES_PREPARED[path_item], self.vertex_radius, f"Vertex: {path_item}, DFS order: {outer_order}-{inner_order}", axes, color, opacity, True, fontsize=8
+                    VERTICES_PREPARED[path_item], self.vertex_radius, f"Vertex: ${path_item}$ \n\n DFS order: ${inner_order+1}_{outer_order+1}$", axes, color, opacity, True, fontsize=10
                 )
                         
         self._plot_node_arrows(axes, VERTICES_PREPARED, adjacency_matrix, directed)
@@ -123,19 +162,49 @@ class GraphEngineTraversal(GraphEngine):
         plt.show()
 
 
-    def plot_bfs(self) -> None:
-        # start_vertex = self._find_start_vertices()
-        # bfs_path = self._bfs(start_vertex=start_vertex)
-        pass
+    def plot_bfs(self, vertical_margin: int, horizontal_margin: int, path_logs: bool = True, directed: bool = True) -> None:
+        bfs_traversal = self._get_bfs(directed)
 
+        VERTICES_PREPARED = self._get_prepared_vertices(vertical_margin, horizontal_margin)
+        adjacency_matrix = self._get_adjacency_matrix(directed)   
+        # opacities = self._compute_dfs_opacities(n_vertex=len(adjacency_matrix[0]))
+
+        figure, axes = plt.subplots()
+
+        if path_logs:
+            print("Staring BFS Traversal:")
+
+        for outer_order, bfs in enumerate(bfs_traversal):
+
+            if path_logs:
+                print(f"Path №{outer_order+1} -> {bfs}")
+
+            for inner_order, (step, color) in enumerate(zip(bfs, self._generate_hex_colors(len(bfs)))):
+                for vertex in step:
+                    self._add_vertex_artix(
+                        VERTICES_PREPARED[vertex], self.vertex_radius, f"Vertex: ${vertex}$ \n\n BFS order: ${inner_order+1}_{outer_order+1}$", axes, color, 1.0, True, fontsize=10
+                    )                
+
+        self._plot_node_arrows(axes, VERTICES_PREPARED, adjacency_matrix, directed)
+
+        plot_limits = self._define_plot_limits(VERTICES_PREPARED)
+
+        plt.xlim(plot_limits[0], plot_limits[1])
+        plt.ylim(plot_limits[2], plot_limits[3])
+        plt.axis("off")
+        plt.title(
+            "BFS Traversal"
+        )
+        plt.show()
 
 if __name__ == "__main__":
     variant_template = Template("1.0 - $first * 0.02 - $second * 0.005 - 0.25")
     small_density_template = Template("0.6 + $first * 0.02 + $second * 0.01")
 
     ge = GraphEngineTraversal(
-        koef_template=small_density_template,
+        koef_template=variant_template,
         node_radius=100,
     )
 
+    ge.plot_bfs(50, 50)
     ge.plot_dfs(50, 50)
