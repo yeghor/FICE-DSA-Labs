@@ -317,13 +317,13 @@ def run_test_suite(step_name, koef_formula, directed_default=True):
 if __name__ == "__main__":
     try:
         run_test_suite(
-            "Phase 1: Basic Stats", 
+            "Phase 1", 
             "1.0 - $first * 0.01 - $second * 0.01 - 0.3",
             directed_default=True
         )
 
         run_test_suite(
-            "Phase 2: Deep Analysis", 
+            "Phase 2", 
             "1.0 - $first * 0.005 - $second * 0.005 - 0.27",
             directed_default=True
         )

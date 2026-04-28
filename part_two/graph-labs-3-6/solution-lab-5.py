@@ -7,6 +7,8 @@ from string import Template
 import matplotlib.pyplot as plt
 import random
 
+import time
+
 # Compatible with DFS
 PathItem = int
 
@@ -21,6 +23,12 @@ DFSPath = List[PathItem]
 
 
 class GraphEngineTraversal(GraphEngine):
+    def __init__(self, koef_template, node_radius = 30, logs_delay: float = 0.3):
+        super().__init__(koef_template, node_radius)
+
+        self._logs_delay = logs_delay
+
+
     @staticmethod
     def _compute_dfs_opacities(n_vertex: int) -> List[float]:
         """Returns evenly computed opacities for path length"""
@@ -50,6 +58,9 @@ class GraphEngineTraversal(GraphEngine):
         if vertex in visited:
             return
 
+        input(f"DFS: Visited {vertex} vertex # ")
+        time.sleep(self._logs_delay)
+
         path.append(vertex)
         visited.add(vertex)
 
@@ -61,45 +72,73 @@ class GraphEngineTraversal(GraphEngine):
 
 
     def _get_dfs(self, adjacency_matrix: NDArray) -> List[DFSPath]:
+        print(F"\nDFS START\n")
+
         start_vertex = self._find_start_vertex(adjacency_matrix)
 
-        all_dfs_paths: List[DFSPath] = []
+        dfs_traversal: List[DFSPath] = []
+
+        input(f"Started path №1 (from {start_vertex}th vertex) # ")
+        time.sleep(self._logs_delay)
+
 
         dfs_path: DFSPath = []
         seen = set()
         self._dfs(adjacency_matrix, start_vertex, seen, dfs_path)
 
-        all_dfs_paths.append(dfs_path)
+        dfs_traversal.append(dfs_path)
+        time.sleep(self._logs_delay)
+
+        print(f"Finished path №1 \n Path -> {dfs_path} \n\n")
+
+        n_path = 2
 
         if len(dfs_path) != len(adjacency_matrix[0]):
-            for new_start_vertex in range(len(adjacency_matrix[0])):
+            for i, new_start_vertex in enumerate(range(len(adjacency_matrix[0]))):
                 if len(dfs_path) >= len(adjacency_matrix[0]):
                     break
 
-                if new_start_vertex == start_vertex:
+                if new_start_vertex == start_vertex or new_start_vertex in seen:
                     continue
+
+                input(f"Started path №{n_path} (from {new_start_vertex}th vertex) # ") # To exclude zero indexed value and already done first path
+                time.sleep(self._logs_delay)
 
                 dfs_path: List[DFSPath] = []
                 self._dfs(adjacency_matrix, new_start_vertex, seen, dfs_path)
 
                 if dfs_path:
-                    all_dfs_paths.append(dfs_path)
+                    dfs_traversal.append(dfs_path)
 
-        return all_dfs_paths
+                print(f"Finished path №{n_path} \n Path -> {dfs_path} \n\n")
+                n_path += 1
+
+        print(f"Full DFS Traversal:")
+        for i, path in enumerate(dfs_traversal):
+            print(f"Component №{i+1}: {path}")
+
+        print(F"\nDFS END\n\n")
+
+        return dfs_traversal
 
     def _get_bfs(self, directed: bool = True) -> List[BFSPath]:
+        print(F"\nBFS START\n")
+
         adjacency_matrix = self._get_adjacency_matrix(directed)
         start_vertices = self._find_start_vertices(adjacency_matrix)
 
         bfs_traversal = []
         seen = set()
 
-        for start_vertex in start_vertices:
+        for i, start_vertex in enumerate(start_vertices):
             if start_vertex in seen:
                 continue
 
             if len(seen) == len(adjacency_matrix[0]):
                 break
+
+            input(f"Started path №{i+1} (from {start_vertex}th vertex) # ")
+            time.sleep(self._logs_delay)
 
             path: List[Tuple[int, int]] = []
             queue: List[Tuple[int, int]] = [[1, start_vertex]] # bfs step -> vertex
@@ -110,6 +149,9 @@ class GraphEngineTraversal(GraphEngine):
 
                 curr_step = queue_vertex[0]
                 vertex = queue_vertex[1]
+
+                input(F"BFS: Visited {vertex} vertex. Current BFS distance: {curr_step} # ")
+                time.sleep(self._logs_delay)
 
                 while curr_step > len(path):
                     path.append([])
@@ -123,10 +165,18 @@ class GraphEngineTraversal(GraphEngine):
 
             bfs_traversal.append(path)
 
+            print(f"Finished path №{i+1} \n Path -> {path} \n\n")
+
+        print(f"Full BFS Traversal:")
+        for i, path in enumerate(bfs_traversal):
+            print(f"Layer №{i+1}: {path}")
+
+        print(F"\nBFS END\n\n")
+
         return bfs_traversal
 
 
-    def plot_dfs(self, vertical_margin: int, horizontal_margin: int, path_logs: bool = True, directed: bool = True) -> None:
+    def plot_dfs(self, vertical_margin: int, horizontal_margin: int, directed: bool = True) -> None:
         adjacency_matrix = self._get_adjacency_matrix(directed=directed)
         dfs_traversal = self._get_dfs(adjacency_matrix)
 
@@ -136,14 +186,7 @@ class GraphEngineTraversal(GraphEngine):
 
         figure, axes = plt.subplots()
 
-        if path_logs:
-            print("Staring DFS Traversal:")
-
         for outer_order, (dfs, color) in enumerate(zip(dfs_traversal, self._generate_hex_colors(len(adjacency_matrix[0])))):
-    
-            if path_logs:
-                print(f"Path №{outer_order+1} -> {dfs}")
-
             for inner_order, (path_item, opacity) in enumerate(zip(dfs, opacities)):
                 self._add_vertex_artix(
                     VERTICES_PREPARED[path_item], self.vertex_radius, f"Vertex: ${path_item}$ \n\n DFS order: ${inner_order+1}_{outer_order+1}$", axes, color, opacity, True, fontsize=10
@@ -162,7 +205,7 @@ class GraphEngineTraversal(GraphEngine):
         plt.show()
 
 
-    def plot_bfs(self, vertical_margin: int, horizontal_margin: int, path_logs: bool = True, directed: bool = True) -> None:
+    def plot_bfs(self, vertical_margin: int, horizontal_margin: int, directed: bool = True) -> None:
         bfs_traversal = self._get_bfs(directed)
 
         VERTICES_PREPARED = self._get_prepared_vertices(vertical_margin, horizontal_margin)
@@ -171,14 +214,7 @@ class GraphEngineTraversal(GraphEngine):
 
         figure, axes = plt.subplots()
 
-        if path_logs:
-            print("Staring BFS Traversal:")
-
         for outer_order, bfs in enumerate(bfs_traversal):
-
-            if path_logs:
-                print(f"Path №{outer_order+1} -> {bfs}")
-
             for inner_order, (step, color) in enumerate(zip(bfs, self._generate_hex_colors(len(bfs)))):
                 for vertex in step:
                     self._add_vertex_artix(
@@ -204,7 +240,8 @@ if __name__ == "__main__":
     ge = GraphEngineTraversal(
         koef_template=variant_template,
         node_radius=100,
+        logs_delay=0.1
     )
 
-    ge.plot_bfs(50, 50)
     ge.plot_dfs(50, 50)
+    ge.plot_bfs(50, 50)
